@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import rw.ac.rca.termOneExam.domain.City;
@@ -15,26 +16,29 @@ public class CityService {
 
 	@Autowired
 	private ICityRepository cityRepository;
-	
+
 	public Optional<City> getById(long id) {
-		
+
 		return cityRepository.findById(id);
 	}
 
+
 	public List<City> getAll() {
-		
+
 		return cityRepository.findAll();
 	}
 
 	public boolean existsByName(String name) {
-		
+
 		return cityRepository.existsByName(name);
 	}
 
 	public City save(CreateCityDTO dto) {
 		City city =  new City(dto.getName(), dto.getWeather());
+		Double fahrenheit = (dto.getWeather() - 32)* 9/5;
+		city.setFahrenheit(fahrenheit);
 		return cityRepository.save(city);
 	}
-	
+
 
 }
