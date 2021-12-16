@@ -4,86 +4,74 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import rw.ac.rca.termOneExam.domain.City;
-import rw.ac.rca.termOneExam.repository.ICityRepository;
 import rw.ac.rca.termOneExam.service.CityService;
 
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-@DataJpaTest
-@RunWith(SpringRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class CityUtilTest {
 
-    @Autowired
-    private ICityRepository cityRepository;
+    @Mock
+    private CityService cityService;
+
+    @InjectMocks
+    private InputValidity validator;
+
 
     @Test
-    public void noCityWithWeatherMoreThan40_test() {
+    public void allCities_WeatherLessThan40(){
 
-        assertEquals(0, cityRepository.countByWeatherGreaterThan(40));
+        when(cityService.getAll()).thenReturn(Arrays.asList(new City(108, "Huye", 29.0),
+                new City(109, "Nyabihu",40.0)));
+        assertEquals(0,validator.lessThan40Validity(cityService.getAll()));
+
     }
 
     @Test
-    public void noCityWithWeatherLessThan10_test() {
+    public void allCitiesWeather_GreaterThan10(){
 
-        assertEquals(0, cityRepository.countByWeatherLessThan(10));
+            new City(109, "Nyabihu",40.0);
+
+        when(cityService.getAll()).thenReturn(Arrays.asList(new City(109, "Huye", 24.0),
+                new City(109, "Nyabihu",40.0)));
+        assertEquals(0,validator.greaterThan10Validity(cityService.getAll()));
     }
 
     @Test
-    public void citiesContainsMusanzeAndKigali_test() {
-        assertTrue(cityRepository.existsByName("Musanze"));
+    public void musanzeAndKigaliContainedInCites(){
+        when(cityService.getAll()).thenReturn(Arrays.asList(
+                new City(109, "Musanze", 24.0),
+                new City(110, "Kigali", 24.0),
+                new City(111, "Nyabihu",40.0)));
 
-        assertTrue(cityRepository.existsByName("Kigali"));
+        assertEquals(true,validator.containsMusanzeAndKigali(cityService.getAll()));
+    }
+    @Test
+    public void testMocking() {
+        List<City> mockedList = Mockito.mock(ArrayList.class);
+        City city = new City("Musanze", 18);
+        mockedList.add(city);
+        Mockito.verify(mockedList).add(city);
+
+        assertEquals(0, mockedList.size());
     }
 
-    @RunWith(MockitoJUnitRunner.class)
-    public static class TestingSpy {
+    @Test
+    public void testSpying() {
+        List<City> spyList = Mockito.spy(ArrayList.class);
+        City city = new City("Musanze", 18);
+        spyList.add(city);
+        Mockito.verify(spyList).add(city);
 
-        @Spy
-        private ICityRepository cityRepositoryBySpy;
-
-        @InjectMocks
-        private CityService cityService;
-
-        @Test
-        public void testSpying() {
-            when(cityRepositoryBySpy.findAll()).thenReturn(Arrays.asList(new City("Kigali", 24), new City("Musanze", 24)));
-
-            List<City> cities = cityService.getAll();
-
-            assertEquals(2, cities.size());
-        }
-
-    }
-
-
-    @RunWith(MockitoJUnitRunner.class)
-    public static class TestingMock {
-
-        @Mock
-        private ICityRepository cityRepositoryByMock;
-
-        @InjectMocks
-        private CityService cityService;
-
-        @Test
-        public void testMocking() {
-            when(cityRepositoryByMock.findAll()).thenReturn(Arrays.asList(new City("Dubayi", 24), new City("Nairobi", 25)));
-
-            List<City> cities = cityService.getAll();
-
-            assertEquals(2, cities.size());
-        }
-
+        assertEquals(1, spyList.size());
     }
 }
